@@ -26,6 +26,10 @@ func (c *Client) readInput() {
 
 		msg = strings.Trim(msg, "\r\n")
 
+		if msg == "" {
+			continue
+		}
+
 		args := strings.Split(msg, " ")
 		cmd := strings.TrimSpace(args[0])
 
@@ -81,7 +85,8 @@ func (c *Client) readInput() {
 }
 
 func (c *Client) err(err error) {
-	c.conn.Write([]byte("ERR: " + err.Error() + "\n"))
+	c.conn.Write([]byte("\rERR: " + err.Error() + "\n"))
+	c.sendPrompt(c.prompt)
 }
 
 func (c *Client) msg(msg string) {
