@@ -12,10 +12,12 @@ type Client struct {
 	nick     string
 	room     *Room
 	commands chan<- Command
+	prompt   string
 }
 
 func (c *Client) readInput() {
 	for {
+		c.sendPrompt(fmt.Sprint(c.prompt))
 		msg, err := bufio.NewReader(c.conn).ReadString('\n')
 		if err != nil {
 			return
@@ -52,6 +54,12 @@ func (c *Client) readInput() {
 					client: c,
 					args:   args,
 				}
+			case "/help":
+				c.commands <- Command{
+					id:     CMD_HELP,
+					client: c,
+					args:   args,
+				}
 			case "/quit":
 				c.commands <- Command{
 					id:     CMD_QUIT,
@@ -76,5 +84,10 @@ func (c *Client) err(err error) {
 }
 
 func (c *Client) msg(msg string) {
-	c.conn.Write([]byte("> " + msg + "\n"))
+	c.conn.Write([]byte("\r" + msg + "\n"))
+	c.sendPrompt(c.prompt)
+}
+
+func (c *Client) sendPrompt(prompt string) {
+	c.conn.Write([]byte(prompt))
 }

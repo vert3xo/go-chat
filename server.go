@@ -31,6 +31,8 @@ func (s *Server) run() {
 			s.listRooms(cmd.client, cmd.args)
 		case CMD_MSG:
 			s.msg(cmd.client, cmd.args)
+		case CMD_HELP:
+			s.help(cmd.client, cmd.args)
 		case CMD_QUIT:
 			s.quit(cmd.client, cmd.args)
 		}
@@ -44,6 +46,7 @@ func (s *Server) newClient(conn net.Conn) {
 		conn:     conn,
 		nick:     "anonymous",
 		commands: s.commands,
+		prompt:   "> ",
 	}
 
 	c.readInput()
@@ -92,6 +95,10 @@ func (s *Server) msg(c *Client, args []string) {
 	}
 
 	c.room.broadcast(c, c.nick+": "+strings.Join(args[1:], " "))
+}
+
+func (s *Server) help(c *Client, args []string) {
+	c.msg(fmt.Sprintf("Help:\n/nick\tSet a nickname\n/join\tJoin a room\n/msg\tAnother way to talk in chat\n/quit\tDisconnect"))
 }
 
 func (s *Server) quit(c *Client, args []string) {
