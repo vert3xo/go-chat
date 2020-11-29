@@ -65,6 +65,11 @@ func (s *Server) join(c *Client, args []string) {
 	defer s.missingArgumentsRecov(c)
 
 	roomName := args[1]
+	if roomName == " " || roomName == "" {
+		c.err(fmt.Errorf("Invalid room name!"))
+		return
+	}
+
 	r, ok := s.rooms[roomName]
 	if !ok {
 		r = &Room{
@@ -96,6 +101,11 @@ func (s *Server) listRooms(c *Client, args []string) {
 
 func (s *Server) msg(c *Client, args []string) {
 	defer s.missingArgumentsRecov(c)
+
+	if args[1] == " " || args[1] == "" {
+		c.err(fmt.Errorf("Invalid message!"))
+		return
+	}
 
 	if c.room == nil {
 		c.err(errors.New("You must join a room first!"))
