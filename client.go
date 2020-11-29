@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math/rand"
 	"net"
 	"strings"
 )
@@ -90,4 +91,15 @@ func (c *Client) msg(msg string) {
 
 func (c *Client) sendPrompt(prompt string) {
 	c.conn.Write([]byte(prompt))
+}
+
+func genRandomName(n int) string {
+	letters := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+	var s strings.Builder
+
+	for i := 0; i < n; i++ {
+		s.WriteByte(letters[rand.Intn(len(letters))])
+	}
+	return s.String()
 }

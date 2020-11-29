@@ -44,10 +44,12 @@ func (s *Server) newClient(conn net.Conn) {
 
 	c := &Client{
 		conn:     conn,
-		nick:     "anonymous",
+		nick:     genRandomName(8),
 		commands: s.commands,
 		prompt:   "> ",
 	}
+
+	c.conn.Write([]byte(fmt.Sprintf("Welcome to the server, you current nick is %s, use /help to get started.\n", c.nick)))
 
 	c.readInput()
 }
