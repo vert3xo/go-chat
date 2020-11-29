@@ -100,7 +100,7 @@ func (c *Client) msg(msg string) {
 }
 
 func (c *Client) sendPrompt(prompt string) {
-	c.conn.Write([]byte(prompt))
+	c.conn.Write([]byte(c.nick + " " + prompt))
 }
 
 func genRandomName(n int) string {
