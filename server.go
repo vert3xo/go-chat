@@ -55,11 +55,15 @@ func (s *Server) newClient(conn net.Conn) {
 }
 
 func (s *Server) nick(c *Client, args []string) {
+	defer s.missingArgumentsRecov(c)
+
 	c.nick = args[1]
 	c.msg(fmt.Sprintf("From now on, you shall be know as %s", c.nick))
 }
 
 func (s *Server) join(c *Client, args []string) {
+	defer s.missingArgumentsRecov(c)
+
 	roomName := args[1]
 	r, ok := s.rooms[roomName]
 	if !ok {
@@ -91,6 +95,8 @@ func (s *Server) listRooms(c *Client, args []string) {
 }
 
 func (s *Server) msg(c *Client, args []string) {
+	defer s.missingArgumentsRecov(c)
+
 	if c.room == nil {
 		c.err(errors.New("You must join a room first!"))
 		return
@@ -100,7 +106,7 @@ func (s *Server) msg(c *Client, args []string) {
 }
 
 func (s *Server) help(c *Client, args []string) {
-	c.msg(fmt.Sprintf("Help:\n/nick\tSet a nickname\n/join\tJoin a room\n/msg\tAnother way to talk in chat\n/quit\tDisconnect"))
+	c.msg(fmt.Sprintf("Help:\n/nick <nick>\tSet a nickname\n/join <room>\tJoin a room\n/msg <msg>\tAnother way to talk in chat\n/quit\tDisconnect"))
 }
 
 func (s *Server) quit(c *Client, args []string) {
@@ -110,6 +116,12 @@ func (s *Server) quit(c *Client, args []string) {
 
 	c.msg("See you later :)")
 	c.conn.Close()
+}
+
+func (s *Server) missingArgumentsRecov(c *Client) {
+	if r := recover(); r != nil {
+		c.warn(fmt.Sprintf("Recovered from %s", r))
+	}
 }
 
 func (s *Server) quitCurrent(c *Client) {

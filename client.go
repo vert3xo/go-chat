@@ -26,7 +26,7 @@ func (c *Client) readInput() {
 
 		msg = strings.Trim(msg, "\r\n")
 
-		if msg == "" {
+		if msg == "" || msg[0] == ' ' {
 			continue
 		}
 
@@ -86,6 +86,11 @@ func (c *Client) readInput() {
 
 func (c *Client) err(err error) {
 	c.conn.Write([]byte("\rERR: " + err.Error() + "\n"))
+	c.sendPrompt(c.prompt)
+}
+
+func (c *Client) warn(warn string) {
+	c.conn.Write([]byte("\rWARN: " + warn + "\n"))
 	c.sendPrompt(c.prompt)
 }
 
