@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -9,14 +8,16 @@ import (
 )
 
 type Server struct {
-	rooms    map[string]*Room
-	commands chan Command
+	rooms     map[string]*Room
+	commands  chan Command
+	connected map[net.Addr]*Client
 }
 
 func newServer() *Server {
 	return &Server{
-		rooms:    make(map[string]*Room),
-		commands: make(chan Command),
+		rooms:     make(map[string]*Room),
+		commands:  make(chan Command),
+		connected: make(map[net.Addr]*Client),
 	}
 }
 
@@ -48,6 +49,8 @@ func (s *Server) newClient(conn net.Conn) {
 		commands: s.commands,
 		prompt:   "> ",
 	}
+
+	s.connected[conn.RemoteAddr()] = c
 
 	c.conn.Write([]byte(fmt.Sprintf("Welcome to the server, you current nick is %s, use /help to get started.\n", c.nick)))
 
@@ -103,20 +106,21 @@ func (s *Server) msg(c *Client, args []string) {
 	defer s.missingArgumentsRecov(c)
 
 	if args[1] == " " || args[1] == "" {
-		c.err(fmt.Errorf("Invalid message!"))
+		c.err(fmt.Errorf("Invalid argument!"))
 		return
 	}
 
-	if c.room == nil {
-		c.err(errors.New("You must join a room first!"))
-		return
+	for _, client := range s.connected {
+		if args[1] == client.nick {
+			client.msg(fmt.Sprintf("From %s: %s", c.nick, strings.Join(args[2:], " ")))
+			return
+		}
 	}
-
-	c.room.broadcast(c, c.nick+": "+strings.Join(args[1:], " "))
+	c.err(fmt.Errorf("That user does not exist!"))
 }
 
 func (s *Server) help(c *Client, args []string) {
-	c.msg(fmt.Sprintf("Help:\n/nick <nick>\tSet a nickname\n/join <room>\tJoin a room\n/msg <msg>\tAnother way to talk in chat\n/quit\tDisconnect"))
+	c.msg(fmt.Sprintf("Help:" + "          " + "\n/nick <nick>\tSet a nickname\n/join <room>\tJoin a room\n/msg <user> <msg>\tAnother way to talk in chat\n/rooms\t\tShow available rooms\n/quit\t\tDisconnect"))
 }
 
 func (s *Server) quit(c *Client, args []string) {
